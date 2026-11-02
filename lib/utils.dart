@@ -59,8 +59,14 @@ String mensajeError(Object e) {
   if (t.contains('Password should be')) return 'La contraseña tiene que tener al menos 6 caracteres.';
   if (t.contains('Email not confirmed')) return 'Confirmá tu email desde el correo que te enviamos.';
   if (t.contains('No hay cupos')) return 'No quedan cupos suficientes para esa fecha.';
-  if (t.contains('SocketException') || t.contains('Failed host lookup') || t.contains('ClientException')) {
-    return 'No hay conexión. Revisá internet e intentá de nuevo.';
+  if (t.contains('rate limit') || t.contains('over_email_send_rate_limit')) {
+    return 'Se enviaron demasiados emails. Esperá unos minutos e intentá de nuevo.';
   }
-  return 'Algo salió mal. Intentá de nuevo.';
+  // Para errores de red o desconocidos mostramos también el detalle técnico,
+  // así es posible saber qué falló.
+  final detalle = t.length > 160 ? '${t.substring(0, 160)}…' : t;
+  if (t.contains('SocketException') || t.contains('Failed host lookup') || t.contains('ClientException')) {
+    return 'No se pudo conectar con el servidor.\nDetalle: $detalle';
+  }
+  return 'Algo salió mal.\nDetalle: $detalle';
 }

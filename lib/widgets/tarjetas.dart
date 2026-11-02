@@ -155,13 +155,16 @@ class ChipFiltro extends StatelessWidget {
         child: Container(
           constraints: const BoxConstraints(minHeight: 44),
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          alignment: Alignment.center,
-          child: Text(
-            texto,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: activo ? AppColors.crema : AppColors.tinta,
+          // widthFactor: 1 hace que el chip ocupe solo el ancho de su texto.
+          child: Center(
+            widthFactor: 1,
+            child: Text(
+              texto,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: activo ? AppColors.crema : AppColors.tinta,
+              ),
             ),
           ),
         ),

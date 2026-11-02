@@ -21,6 +21,17 @@ class TallerApp extends StatelessWidget {
       title: 'Taller',
       debugShowCheckedModeBanner: false,
       theme: construirTema(),
+      // En pantallas anchas (computadora) la app se muestra centrada
+      // con el ancho de un celular, como en el diseño.
+      builder: (context, child) => ColoredBox(
+        color: const Color(0xFFE9E1D4),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: child,
+          ),
+        ),
+      ),
       home: const ControlDeSesion(),
     );
   }
