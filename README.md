@@ -4,10 +4,14 @@ App móvil para descubrir y reservar experiencias creativas y de bienestar en Me
 
 Proyecto de Carlota Monteverdi · Licenciatura en Comunicación Digital e Interactiva · UCA · 2026.
 
+**App publicada:** https://carlotafotografias-stack.github.io/taller/
+
 ## Tecnologías
 
+- **Figma** para la investigación UX, el sistema de diseño y el prototipo.
 - **Flutter / Dart** para la app (Android, iOS y web con un solo código).
-- **Supabase** como base de datos (PostgreSQL), autenticación de usuarios y reglas de seguridad.
+- **Firebase** para el backend: Authentication (usuarios) y Cloud Firestore (base de datos), con reglas de seguridad.
+- **GitHub Actions + GitHub Pages** para compilar y publicar la app automáticamente.
 
 ## Funcionalidades
 
@@ -24,45 +28,46 @@ Proyecto de Carlota Monteverdi · Licenciatura en Comunicación Digital e Intera
 
 ```
 lib/
-├── main.dart              # Arranque, conexión con Supabase y control de sesión
-├── config.dart            # URL y clave de Supabase
+├── main.dart              # Arranque, conexión con Firebase y control de sesión
+├── config.dart            # Datos de conexión del proyecto de Firebase
 ├── theme.dart             # Colores y tipografías del sistema de diseño
 ├── models.dart            # Taller, Fecha, Reserva y categorías
-├── datos.dart             # Consultas a Supabase
+├── datos.dart             # Lecturas y escrituras en Firestore y Authentication
 ├── utils.dart             # Formato de precios, fechas y mensajes de error
 ├── widgets/               # Tarjetas, chips e ilustraciones por categoría
 └── screens/               # Bienvenida, Inicio, Explorar, Detalle, Reserva,
                            # Confirmación, Mis reservas y Perfil
-supabase/
-└── schema.sql             # Tablas, reglas de seguridad y datos de ejemplo
+firebase/
+└── firestore.rules        # Reglas de seguridad de la base de datos
 ```
 
-## Base de datos
+## Base de datos (Cloud Firestore)
 
-| Tabla | Contenido |
+| Colección | Contenido |
 |---|---|
-| `perfiles` | Nombre e intereses de cada usuario (se crea solo al registrarse) |
+| `perfiles` | Nombre e intereses de cada usuario (uno por cuenta) |
 | `talleres` | Título, categoría, descripción, lugar, precio, duración, nivel y docente |
 | `fechas` | Fecha y hora de cada taller, con cupo total y disponible |
 | `reservas` | Quién reservó, qué fecha, cuántos lugares, total y código QR |
 | `resenas` | Puntaje de 1 a 5 de cada usuario para cada taller |
 
-La función `reservar` descuenta los cupos dentro de la base, así dos personas no pueden quedarse con el mismo lugar. Las reglas de seguridad (RLS) permiten que cualquiera vea los talleres, pero cada usuario solo ve sus propias reservas.
+Al reservar, la app usa una **transacción**: revisa el cupo, lo descuenta y crea la reserva en un solo paso, así dos personas no pueden quedarse con el mismo lugar. Las **reglas de seguridad** permiten que cualquiera vea los talleres, pero cada usuario solo ve sus propias reservas, y el cupo solo puede bajar, nunca quedar negativo.
 
-## Cómo ejecutarla
+La primera vez que alguien inicia sesión, la app carga sola los 6 talleres de ejemplo con 6 fechas semanales cada uno.
 
-### 1. Crear la base de datos en Supabase
+## Cómo configurarla
 
-1. Entrá a [supabase.com](https://supabase.com) y creá una cuenta gratuita (podés ingresar con GitHub).
-2. Creá un proyecto nuevo: nombre `taller`, una contraseña para la base y región **South America (São Paulo)**.
-3. Cuando termine de crearse, abrí **SQL Editor › New query**, pegá todo el contenido de `supabase/schema.sql` y tocá **Run**.
-4. Para probar sin confirmar emails: **Authentication › Sign In / Providers › Email** y desactivá **Confirm email**.
-5. En **Project Settings › API** copiá la **Project URL** y la clave **anon public**, y pegalas en `lib/config.dart`.
+### 1. Crear el proyecto en Firebase
 
-### 2. Correr la app
+1. Entrá a [console.firebase.google.com](https://console.firebase.google.com) y creá un proyecto llamado `taller`.
+2. **Authentication › Sign-in method:** activá **Correo electrónico/contraseña**. En **Configuración › Dominios autorizados** agregá el dominio donde se publica la app (por ejemplo `usuario.github.io`).
+3. **Firestore Database:** creá la base en modo producción (región `southamerica-east1`). En la pestaña **Reglas** pegá el contenido de `firebase/firestore.rules` y tocá **Publicar**.
+4. **Configuración del proyecto › Tus apps:** registrá una app web y copiá sus datos (`apiKey`, `projectId`, etc.) en `lib/config.dart`.
 
-1. Instalá Flutter siguiendo [docs.flutter.dev/get-started](https://docs.flutter.dev/get-started/install). Lo más simple es usar VS Code con la extensión de Flutter.
-2. Abrí una terminal en la carpeta del proyecto y ejecutá:
+### 2. Correr la app en tu computadora (opcional)
+
+1. Instalá Flutter siguiendo [docs.flutter.dev/get-started](https://docs.flutter.dev/get-started/install).
+2. En una terminal, dentro de la carpeta del proyecto:
 
 ```
 flutter create . --project-name taller --platforms web,android,ios
@@ -70,8 +75,6 @@ flutter pub get
 flutter run -d chrome
 ```
 
-El primer comando genera las carpetas de cada plataforma; solo hace falta la primera vez.
+### 3. Publicación automática
 
-### Opción sin instalar nada: GitHub Pages
-
-El repositorio incluye `.github/workflows/publicar.yml`, que compila la app y la publica en GitHub Pages cada vez que se suben cambios. Para activarlo: **Settings › Pages › Source: GitHub Actions**. La app queda disponible en `https://<usuario>.github.io/taller/`.
+`.github/workflows/publicar.yml` compila la app y la publica en GitHub Pages cada vez que se suben cambios a `main` (activarlo en **Settings › Pages › Source: GitHub Actions**). `.github/workflows/verificar.yml` revisa que compilen los cambios de otras ramas, sin publicarlos.
