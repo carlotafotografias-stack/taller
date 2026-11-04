@@ -51,22 +51,33 @@ bool esEsteFinde(DateTime f) {
   return !f.isBefore(desde) && f.isBefore(hasta);
 }
 
-/// Traduce los errores más comunes de Supabase a mensajes claros.
+/// Traduce los errores más comunes de Firebase a mensajes claros.
 String mensajeError(Object e) {
   final t = e.toString();
-  if (t.contains('Invalid login credentials')) return 'El email o la contraseña no son correctos.';
-  if (t.contains('User already registered')) return 'Ya existe una cuenta con ese email.';
-  if (t.contains('Password should be')) return 'La contraseña tiene que tener al menos 6 caracteres.';
-  if (t.contains('Email not confirmed')) return 'Confirmá tu email desde el correo que te enviamos.';
-  if (t.contains('No hay cupos')) return 'No quedan cupos suficientes para esa fecha.';
-  if (t.contains('rate limit') || t.contains('over_email_send_rate_limit')) {
-    return 'Se enviaron demasiados emails. Esperá unos minutos e intentá de nuevo.';
+  // Códigos de error de Firebase Authentication y Firestore.
+  if (t.contains('invalid-credential') || t.contains('wrong-password') || t.contains('user-not-found')) {
+    return 'El email o la contraseña no son correctos.';
   }
+  if (t.contains('email-already-in-use')) return 'Ya existe una cuenta con ese email.';
+  if (t.contains('weak-password')) return 'La contraseña tiene que tener al menos 6 caracteres.';
+  if (t.contains('invalid-email')) return 'El email no es válido.';
+  if (t.contains('too-many-requests')) return 'Demasiados intentos. Esperá unos minutos e intentá de nuevo.';
+  if (t.contains('operation-not-allowed')) {
+    return 'El inicio de sesión con email no está activado en Firebase (Authentication › Sign-in method).';
+  }
+  if (t.contains('unauthorized-domain')) {
+    return 'Este sitio no está autorizado en Firebase (Authentication › Configuración › Dominios autorizados).';
+  }
+  if (t.contains('No hay cupos')) return 'No quedan cupos suficientes para esa fecha.';
+  if (t.contains('Esa fecha ya pasó')) return 'Esa fecha ya pasó. Elegí otra.';
   // Para errores de red o desconocidos mostramos también el detalle técnico,
   // así es posible saber qué falló.
   final detalle = t.length > 160 ? '${t.substring(0, 160)}…' : t;
-  if (t.contains('SocketException') || t.contains('Failed host lookup') || t.contains('ClientException')) {
-    return 'No se pudo conectar con el servidor.\nDetalle: $detalle';
+  if (t.contains('network-request-failed') || t.contains('unavailable')) {
+    return 'No se pudo conectar con el servidor. Revisá internet.\nDetalle: $detalle';
+  }
+  if (t.contains('permission-denied')) {
+    return 'Firebase no permitió esta acción (revisá las reglas de Firestore).\nDetalle: $detalle';
   }
   return 'Algo salió mal.\nDetalle: $detalle';
 }

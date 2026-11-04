@@ -37,7 +37,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
 
   @override
   Widget build(BuildContext context) {
-    final email = supabase.auth.currentUser?.email ?? '';
+    final email = Datos.email ?? '';
     return SafeArea(
       child: FutureBuilder<Map<String, dynamic>?>(
         future: _carga,

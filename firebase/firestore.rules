@@ -1,0 +1,60 @@
+rules_version = '2';
+
+// =============================================================
+//  TALLER · Reglas de seguridad de Firestore
+//  Pegar en Firebase › Firestore Database › Reglas y Publicar.
+// =============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function logueado() {
+      return request.auth != null;
+    }
+
+    // Los 6 talleres de ejemplo que la app carga la primera vez.
+    function tallerDeEjemplo(id) {
+      return id in ['torno-principiantes', 'yoga-atardecer', 'acuarela-botanica',
+                    'bano-de-sonido', 'fotografia-analogica', 'modelado-a-mano'];
+    }
+
+    // Talleres: cualquiera los ve. Solo se pueden crear los de ejemplo,
+    // y nunca modificarlos ni borrarlos desde la app.
+    match /talleres/{tallerId} {
+      allow read: if true;
+      allow create: if logueado() && tallerDeEjemplo(tallerId);
+    }
+
+    // Fechas: cualquiera las ve. Al reservar solo se puede bajar el cupo
+    // disponible, y nunca por debajo de cero.
+    match /fechas/{fechaId} {
+      allow read: if true;
+      allow create: if logueado()
+        && tallerDeEjemplo(request.resource.data.tallerId)
+        && fechaId.matches(request.resource.data.tallerId + '-[1-6]');
+      allow update: if logueado()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['cupoDisponible'])
+        && request.resource.data.cupoDisponible < resource.data.cupoDisponible
+        && request.resource.data.cupoDisponible >= 0;
+    }
+
+    // Perfil: cada persona ve y edita solo el suyo.
+    match /perfiles/{uid} {
+      allow read, write: if logueado() && request.auth.uid == uid;
+    }
+
+    // Reservas: cada persona ve y crea solo las suyas.
+    match /reservas/{reservaId} {
+      allow read: if logueado() && resource.data.usuarioId == request.auth.uid;
+      allow create: if logueado() && request.resource.data.usuarioId == request.auth.uid;
+    }
+
+    // Reseñas: todos las leen; cada persona escribe solo la suya (una por taller).
+    match /resenas/{resenaId} {
+      allow read: if true;
+      allow create, update: if logueado()
+        && request.resource.data.usuarioId == request.auth.uid
+        && resenaId == request.auth.uid + '_' + request.resource.data.tallerId;
+    }
+  }
+}

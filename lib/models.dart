@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'theme.dart';
@@ -20,6 +21,15 @@ enum Categoria {
       Categoria.values.firstWhere((c) => c.name == valor, orElse: () => Categoria.ceramica);
 }
 
+/// Firestore guarda las fechas como Timestamp.
+DateTime _aFecha(dynamic valor) {
+  if (valor is Timestamp) return valor.toDate();
+  if (valor is DateTime) return valor;
+  return DateTime.now();
+}
+
+int _aEntero(dynamic valor) => (valor as num?)?.toInt() ?? 0;
+
 class Fecha {
   final String id;
   final String tallerId;
@@ -35,12 +45,12 @@ class Fecha {
     required this.cupoDisponible,
   });
 
-  factory Fecha.desdeMapa(Map<String, dynamic> m) => Fecha(
-        id: m['id'] as String,
-        tallerId: m['taller_id'] as String,
-        inicio: DateTime.parse(m['inicio'] as String).toLocal(),
-        cupoTotal: m['cupo_total'] as int,
-        cupoDisponible: m['cupo_disponible'] as int,
+  factory Fecha.desdeDoc(String id, Map<String, dynamic> m) => Fecha(
+        id: id,
+        tallerId: m['tallerId'] as String,
+        inicio: _aFecha(m['inicio']),
+        cupoTotal: _aEntero(m['cupoTotal']),
+        cupoDisponible: _aEntero(m['cupoDisponible']),
       );
 }
 
@@ -57,6 +67,8 @@ class Taller {
   final bool materialesIncluidos;
   final String docente;
   final bool destacado;
+
+  /// Solo las fechas futuras, ordenadas de la más próxima a la más lejana.
   final List<Fecha> fechas;
 
   Taller({
@@ -75,25 +87,22 @@ class Taller {
     required this.fechas,
   });
 
-  factory Taller.desdeMapa(Map<String, dynamic> m) {
-    final fechas = ((m['fechas'] as List?) ?? [])
-        .map((f) => Fecha.desdeMapa(Map<String, dynamic>.from(f as Map)))
-        .where((f) => f.inicio.isAfter(DateTime.now()))
-        .toList()
+  factory Taller.desdeDoc(String id, Map<String, dynamic> m, [List<Fecha> todasLasFechas = const []]) {
+    final fechas = todasLasFechas.where((f) => f.inicio.isAfter(DateTime.now())).toList()
       ..sort((a, b) => a.inicio.compareTo(b.inicio));
     return Taller(
-      id: m['id'] as String,
-      titulo: m['titulo'] as String,
-      categoria: Categoria.desde(m['categoria'] as String),
-      descripcion: m['descripcion'] as String,
-      lugar: m['lugar'] as String,
-      zona: m['zona'] as String,
-      precio: m['precio'] as int,
-      duracionMin: m['duracion_min'] as int,
-      nivel: m['nivel'] as String,
-      materialesIncluidos: m['materiales_incluidos'] as bool,
-      docente: m['docente'] as String,
-      destacado: m['destacado'] as bool,
+      id: id,
+      titulo: m['titulo'] as String? ?? '',
+      categoria: Categoria.desde(m['categoria'] as String? ?? ''),
+      descripcion: m['descripcion'] as String? ?? '',
+      lugar: m['lugar'] as String? ?? '',
+      zona: m['zona'] as String? ?? '',
+      precio: _aEntero(m['precio']),
+      duracionMin: _aEntero(m['duracionMin']),
+      nivel: m['nivel'] as String? ?? '',
+      materialesIncluidos: m['materialesIncluidos'] as bool? ?? true,
+      docente: m['docente'] as String? ?? '',
+      destacado: m['destacado'] as bool? ?? false,
       fechas: fechas,
     );
   }
@@ -124,19 +133,14 @@ class Reserva {
     required this.fecha,
   });
 
-  /// Espera una fila de "reservas" con los datos del taller y la fecha incluidos.
-  factory Reserva.desdeMapa(Map<String, dynamic> m) {
-    final tallerMapa = Map<String, dynamic>.from(m['talleres'] as Map);
-    tallerMapa['fechas'] = <dynamic>[];
-    return Reserva(
-      id: m['id'] as String,
-      cantidad: m['cantidad'] as int,
-      total: m['total'] as int,
-      codigo: m['codigo'] as String,
-      taller: Taller.desdeMapa(tallerMapa),
-      fecha: Fecha.desdeMapa(Map<String, dynamic>.from(m['fechas'] as Map)),
-    );
-  }
+  factory Reserva.desdeDoc(String id, Map<String, dynamic> m, Taller taller, Fecha fecha) => Reserva(
+        id: id,
+        cantidad: _aEntero(m['cantidad']),
+        total: _aEntero(m['total']),
+        codigo: m['codigo'] as String? ?? '',
+        taller: taller,
+        fecha: fecha,
+      );
 
   bool get esPasada => fecha.inicio.isBefore(DateTime.now());
 }

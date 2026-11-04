@@ -41,10 +41,6 @@ class _BienvenidaState extends State<Bienvenida> {
           contrasena: _contrasena.text,
           intereses: _intereses.toList(),
         );
-        if (mounted && supabase.auth.currentSession == null) {
-          _mostrar('Te enviamos un email para confirmar la cuenta. Después ingresá desde acá.');
-          setState(() => _esRegistro = false);
-        }
       } else {
         await Datos.ingresar(email: _email.text.trim(), contrasena: _contrasena.text);
       }

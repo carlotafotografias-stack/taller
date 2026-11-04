@@ -1,0 +1,21 @@
+# Revisa que el código compile en cualquier rama que no sea main,
+# sin publicar nada. Sirve para probar cambios antes de pasarlos a la app real.
+name: Verificar
+
+on:
+  push:
+    branches-ignore: [main]
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter create . --project-name taller --platforms web
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test
+      - run: flutter build web --release

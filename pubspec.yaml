@@ -1,7 +1,7 @@
 name: taller
 description: Taller, app para descubrir y reservar experiencias creativas en Mendoza.
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ^3.5.0
@@ -9,7 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  supabase_flutter: ^2.8.0
+  firebase_core: '>=3.6.0 <6.0.0'
+  firebase_auth: '>=5.3.0 <8.0.0'
+  cloud_firestore: '>=5.4.0 <8.0.0'
   google_fonts: ^6.2.1
   qr_flutter: ^4.1.0
 
