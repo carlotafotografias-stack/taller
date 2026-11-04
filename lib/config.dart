@@ -9,10 +9,10 @@ import 'package:firebase_core/firebase_core.dart';
 // ============================================================
 
 const firebaseOptions = FirebaseOptions(
-  apiKey: 'TU-API-KEY',
-  authDomain: 'TU-PROYECTO.firebaseapp.com',
-  projectId: 'TU-PROYECTO',
-  storageBucket: 'TU-PROYECTO.firebasestorage.app',
-  messagingSenderId: '000000000000',
-  appId: '1:000000000000:web:0000000000000000000000',
+  apiKey: 'AIzaSyCfrbYN3JA3gHYpI5xAja5SCGaedOImYug',
+  authDomain: 'taller-aad4e.firebaseapp.com',
+  projectId: 'taller-aad4e',
+  storageBucket: 'taller-aad4e.firebasestorage.app',
+  messagingSenderId: '983370382406',
+  appId: '1:983370382406:web:0cfbbb6e6f59424d0e5e47',
 );
